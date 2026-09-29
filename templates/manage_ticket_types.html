@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Manage Ticket Types — {{ event.title }}{% endblock %}
+{% block content %}
+<section class="section">
+    <h2><i class="fa-solid fa-tags"></i> Ticket Types for "{{ event.title }}"</h2>
+    <p class="event-meta"><i class="fa-solid fa-location-dot"></i> {{ event.venue }} | <i class="fa-regular fa-calendar"></i> {{ event.event_date.strftime('%d %b %Y, %H:%M') }}</p>
+
+    <div class="form-container" style="margin-left:0;">
+        <h3>Add a Ticket Type</h3>
+        <form method="POST" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.category.label }}
+                {{ form.category(class="form-control") }}
+            </div>
+
+            <div class="form-group">
+                {{ form.price.label }}
+                {{ form.price(class="form-control") }}
+                {% for error in form.price.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.capacity.label }}
+                {{ form.capacity(class="form-control") }}
+                {% for error in form.capacity.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+
+            {{ form.submit(class="btn-primary btn-block") }}
+        </form>
+    </div>
+
+    <h3 style="margin-top: 32px;">Existing Ticket Types</h3>
+    {% if event.ticket_types %}
+        <table class="data-table">
+            <thead>
+                <tr><th>Category</th><th>Price</th><th>Capacity</th><th>Sold</th><th>Available</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+                {% for tt in event.ticket_types %}
+                    <tr>
+                        <td>
+                            {% if tt.category == 'vvip' %}
+                                <span class="badge badge-danger">VVIP</span>
+                            {% elif tt.category == 'vip' %}
+                                <span class="badge badge-warning">VIP</span>
+                            {% else %}
+                                <span class="badge badge-success">Ordinary</span>
+                            {% endif %}
+                        </td>
+                        <td>${{ '%.2f'|format(tt.price) }}</td>
+                        <td>{{ tt.capacity }}</td>
+                        <td>{{ tt.tickets_sold }}</td>
+                        <td>{{ tt.available }}</td>
+                        <td>
+                            {% if tt.tickets_sold == 0 %}
+                                <form method="POST" action="{{ url_for('delete_ticket_type', tt_id=tt.id) }}" onsubmit="return confirm('Delete this ticket type?');">
+                                    <button type="submit" class="link-danger"><i class="fa-solid fa-trash"></i> Delete</button>
+                                </form>
+                            {% else %}
+                                <small>Locked (has bookings)</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty-state"><i class="fa-solid fa-tags"></i> No ticket types yet. Add one above.</p>
+    {% endif %}
+
+    <p style="margin-top: 24px;">
+        <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn-secondary">View Event</a>
+        <a href="{{ url_for('my_events') }}" class="btn-secondary">Back to My Events</a>
+    </p>
+</section>
+{% endblock %}

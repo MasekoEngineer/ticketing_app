@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ event.title }} — TicketHub{% endblock %}
+{% block content %}
+<div class="detail-container">
+    <h1>{{ event.title }}</h1>
+    <p class="event-meta"><i class="fa-solid fa-location-dot"></i> {{ event.venue }}</p>
+    <p class="event-meta"><i class="fa-regular fa-calendar"></i> {{ event.event_date.strftime('%A, %d %B %Y at %H:%M') }}</p>
+
+    {% if event.description %}
+        <p class="event-description">{{ event.description }}</p>
+    {% endif %}
+
+    <p><strong><i class="fa-solid fa-user-tie"></i> Organizer:</strong> {{ event.organizer.full_name }}</p>
+
+    <h3 style="margin: 20px 0 12px;"><i class="fa-solid fa-tags"></i> Available Ticket Types</h3>
+    {% if event.ticket_types %}
+        <table class="data-table">
+            <thead>
+                <tr><th>Category</th><th>Price</th><th>Available</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                {% for tt in event.ticket_types %}
+                    <tr>
+                        <td>
+                            {% if tt.category == 'vvip' %}<span class="badge badge-danger">VVIP</span>
+                            {% elif tt.category == 'vip' %}<span class="badge badge-warning">VIP</span>
+                            {% else %}<span class="badge badge-success">Ordinary</span>{% endif %}
+                        </td>
+                        <td>${{ '%.2f'|format(tt.price) }}</td>
+                        <td>{{ tt.available }} / {{ tt.capacity }}</td>
+                        <td>
+                            {% if tt.is_sold_out %}<span class="badge badge-danger">Sold Out</span>
+                            {% else %}<span class="badge badge-success">Available</span>{% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty-state">No ticket types added yet.</p>
+    {% endif %}
+
+    <div style="margin-top: 24px;">
+        {% if current_user.is_authenticated %}
+            {% if current_user.id == event.organizer_id %}
+                <a href="{{ url_for('manage_ticket_types', event_id=event.id) }}" class="btn-primary">
+                    <i class="fa-solid fa-tags"></i> Manage Ticket Types
+                </a>
+                <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn-secondary">
+                    <i class="fa-solid fa-pen"></i> Edit Event
+                </a>
+                <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" style="display:inline" onsubmit="return confirm('Delete this event?');">
+                    <button type="submit" class="btn-danger"><i class="fa-solid fa-trash"></i> Delete</button>
+                </form>
+            {% elif event.is_sold_out %}
+                <p class="badge badge-danger"><i class="fa-solid fa-ban"></i> Sold Out</p>
+            {% elif event.ticket_types %}
+                <a href="{{ url_for('book_ticket', event_id=event.id) }}" class="btn-primary btn-large">
+                    <i class="fa-solid fa-ticket"></i> Book Tickets
+                </a>
+            {% else %}
+                <p class="badge badge-warning">Tickets not yet available.</p>
+            {% endif %}
+        {% else %}
+            <p><a href="{{ url_for('login') }}">Log in</a> to book tickets.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

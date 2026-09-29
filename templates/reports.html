@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Reports — TicketHub{% endblock %}
+{% block content %}
+<section class="section">
+    <h2><i class="fa-solid fa-chart-line"></i> Sales Report</h2>
+
+    {% if report_data %}
+        {% for row in report_data %}
+            <div style="margin-bottom: 32px;">
+                <h3>{{ row.event.title }}</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Category</th><th>Sold</th><th>Capacity</th><th>Revenue</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for c in row.categories %}
+                            <tr>
+                                <td>
+                                    {% if c.category == 'vvip' %}<span class="badge badge-danger">VVIP</span>
+                                    {% elif c.category == 'vip' %}<span class="badge badge-warning">VIP</span>
+                                    {% else %}<span class="badge badge-success">Ordinary</span>{% endif %}
+                                </td>
+                                <td>{{ c.sold }}</td>
+                                <td>{{ c.capacity }}</td>
+                                <td>${{ '%.2f'|format(c.revenue) }}</td>
+                            </tr>
+                        {% endfor %}
+                        <tr style="font-weight: bold; background: #f8fafc;">
+                            <td colspan="3" style="text-align: right;">Total Revenue:</td>
+                            <td>${{ '%.2f'|format(row.total_revenue) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="empty-state"><i class="fa-regular fa-chart-bar"></i> No data yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

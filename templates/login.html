@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Login — TicketHub{% endblock %}
+{% block content %}
+<div class="form-container">
+    <h2><i class="fa-solid fa-right-to-bracket"></i> Log In</h2>
+    <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+            {{ form.email.label }}
+            {{ form.email(class="form-control") }}
+            {% for error in form.email.errors %}<span class="error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.password.label }}
+            {{ form.password(class="form-control") }}
+            {% for error in form.password.errors %}<span class="error">{{ error }}</span>{% endfor %}
+        </div>
+
+        {{ form.submit(class="btn-primary btn-block") }}
+    </form>
+    <p class="form-footer">No account? <a href="{{ url_for('register') }}">Register here</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}My Events — TicketHub{% endblock %}
+{% block content %}
+<section class="section">
+    <h2><i class="fa-solid fa-list"></i> My Events</h2>
+    {% if events %}
+        <table class="data-table">
+            <thead>
+                <tr><th>Title</th><th>Date</th><th>Venue</th><th>Categories</th><th>Total Capacity</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                    <tr>
+                        <td>{{ event.title }}</td>
+                        <td>{{ event.event_date.strftime('%d %b %Y, %H:%M') }}</td>
+                        <td>{{ event.venue }}</td>
+                        <td>
+                            {% for tt in event.ticket_types %}
+                                <span class="badge {% if tt.category == 'vvip' %}badge-danger{% elif tt.category == 'vip' %}badge-warning{% else %}badge-success{% endif %}">
+                                    {{ tt.category.upper() }}
+                                </span>
+                            {% else %}
+                                <small>None</small>
+                            {% endfor %}
+                        </td>
+                        <td>{{ event.total_capacity }}</td>
+                        <td>
+                            <a href="{{ url_for('manage_ticket_types', event_id=event.id) }}" title="Ticket Types"><i class="fa-solid fa-tags"></i></a>
+                            <a href="{{ url_for('event_detail', event_id=event.id) }}" title="View"><i class="fa-solid fa-eye"></i></a>
+                            <a href="{{ url_for('edit_event', event_id=event.id) }}" title="Edit"><i class="fa-solid fa-pen"></i></a>
+                            <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" style="display:inline" onsubmit="return confirm('Delete?');">
+                                <button type="submit" class="link-danger" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty-state"><i class="fa-regular fa-folder-open"></i> No events yet. <a href="{{ url_for('create_event') }}">Create one</a>.</p>
+    {% endif %}
+</section>
+{% endblock %}

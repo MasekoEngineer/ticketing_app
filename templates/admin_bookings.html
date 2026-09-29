@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Admin — Bookings{% endblock %}
+{% block content %}
+<section class="section">
+    <h2><i class="fa-solid fa-shield-halved"></i> Admin — Booking Approvals</h2>
+
+    <h3 style="margin: 20px 0 12px;">Pending Requests ({{ pending|length }})</h3>
+    {% if pending %}
+        <table class="data-table">
+            <thead>
+                <tr><th>ID</th><th>Attendee</th><th>Event</th><th>Category</th><th>Qty</th><th>Total</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+                {% for b in pending %}
+                    <tr>
+                        <td>#{{ b.id }}</td>
+                        <td>{{ b.attendee.full_name }}<br><small>{{ b.attendee.email }}</small></td>
+                        <td>{{ b.event.title }}</td>
+                        <td>
+                            {% if b.ticket_type.category == 'vvip' %}<span class="badge badge-danger">VVIP</span>
+                            {% elif b.ticket_type.category == 'vip' %}<span class="badge badge-warning">VIP</span>
+                            {% else %}<span class="badge badge-success">Ordinary</span>{% endif %}
+                        </td>
+                        <td>{{ b.quantity }}</td>
+                        <td>${{ '%.2f'|format(b.total_price) }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('approve_booking', booking_id=b.id) }}" style="display:inline">
+                                <button type="submit" class="btn-primary" style="padding:6px 12px; font-size:13px;">
+                                    <i class="fa-solid fa-check"></i> Approve
+                                </button>
+                            </form>
+                            <button type="button"
+                                    class="btn-danger reject-btn"
+                                    style="padding:6px 12px; font-size:13px;"
+                                    data-booking-id="{{ b.id }}"
+                                    data-attendee="{{ b.attendee.full_name }}"
+                                    data-event="{{ b.event.title }}">
+                                <i class="fa-solid fa-xmark"></i> Reject
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty-state"><i class="fa-solid fa-inbox"></i> No pending requests.</p>
+    {% endif %}
+
+    <h3 style="margin: 32px 0 12px;">Recent Bookings</h3>
+    <table class="data-table">
+        <thead>
+            <tr><th>ID</th><th>Attendee</th><th>Event</th><th>Category</th><th>Qty</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            {% for b in all_bookings %}
+                <tr>
+                    <td>#{{ b.id }}</td>
+                    <td>{{ b.attendee.full_name }}</td>
+                    <td>{{ b.event.title }}</td>
+                    <td>
+                        {% if b.ticket_type.category == 'vvip' %}<span class="badge badge-danger">VVIP</span>
+                        {% elif b.ticket_type.category == 'vip' %}<span class="badge badge-warning">VIP</span>
+                        {% else %}<span class="badge badge-success">Ordinary</span>{% endif %}
+                    </td>
+                    <td>{{ b.quantity }}</td>
+                    <td>
+                        {% if b.status == 'confirmed' %}<span class="badge badge-success">Confirmed</span>
+                        {% elif b.status == 'pending' %}<span class="badge badge-warning">Pending</span>
+                        {% elif b.status == 'rejected' %}<span class="badge badge-danger">Rejected</span>
+                        {% else %}<span class="badge badge-danger">Cancelled</span>{% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<!-- Rejection Modal -->
+<div id="reject-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-circle-xmark" style="color:#dc2626;"></i> Reject Booking <span id="modal-booking-id"></span></h3>
+            <button type="button" class="modal-close" id="modal-close-btn">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            <p style="background:#f8fafc; padding:10px; border-radius:6px; margin-bottom:14px;">
+                <strong>Attendee:</strong> <span id="modal-attendee"></span><br>
+                <strong>Event:</strong> <span id="modal-event"></span>
+            </p>
+
+            <form id="reject-form" method="POST" novalidate>
+                {{ reject_form.hidden_tag() }}
+                <div class="form-group">
+                    {{ reject_form.reason.label }}
+                    {{ reject_form.reason(class="form-control", id="modal-reason") }}
+                    <small class="hint">
+                        <i class="fa-solid fa-circle-info"></i>
+                        Minimum 5 characters, maximum 500. This will be sent to the attendee.
+                    </small>
+                    <span id="modal-reason-error" class="error" style="display:none;"></span>
+                </div>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" id="modal-cancel-btn">Cancel</button>
+            <button type="submit" form="reject-form" class="btn-danger">
+                <i class="fa-solid fa-xmark"></i> Confirm Rejection
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+.modal-box {
+    background: white;
+    border-radius: 12px;
+    max-width: 520px;
+    width: 100%;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    animation: modalFadeIn 0.2s ease;
+}
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 22px;
+    border-bottom: 1px solid #e2e8f0;
+}
+.modal-header h3 { margin: 0; font-size: 18px; }
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    color: #94a3b8;
+}
+.modal-close:hover { color: #1e293b; }
+.modal-body { padding: 22px; }
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 22px;
+    border-top: 1px solid #e2e8f0;
+}
+</style>
+
+<script>
+(function() {
+    const modal = document.getElementById('reject-modal');
+    const form = document.getElementById('reject-form');
+    const reasonField = document.getElementById('modal-reason');
+    const reasonError = document.getElementById('modal-reason-error');
+    const bookingIdSpan = document.getElementById('modal-booking-id');
+    const attendeeSpan = document.getElementById('modal-attendee');
+    const eventSpan = document.getElementById('modal-event');
+
+    function openModal(bookingId, attendee, event) {
+        bookingIdSpan.textContent = '#' + bookingId;
+        attendeeSpan.textContent = attendee;
+        eventSpan.textContent = event;
+        reasonField.value = '';
+        reasonError.style.display = 'none';
+        form.action = '/admin/bookings/' + bookingId + '/reject';
+        modal.style.display = 'flex';
+        setTimeout(() => reasonField.focus(), 100);
+    }
+
+    function closeModal() {
+        modal.style.display = 'none';
+    }
+
+    document.querySelectorAll('.reject-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            openModal(
+                btn.dataset.bookingId,
+                btn.dataset.attendee,
+                btn.dataset.event
+            );
+        });
+    });
+
+    document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+    document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
+    });
+
+    form.addEventListener('submit', (e) => {
+        const value = reasonField.value.trim();
+        if (value.length < 5) {
+            e.preventDefault();
+            reasonError.textContent = 'Reason must be at least 5 characters.';
+            reasonError.style.display = 'block';
+            reasonField.focus();
+        } else if (value.length > 500) {
+            e.preventDefault();
+            reasonError.textContent = 'Reason must be 500 characters or fewer.';
+            reasonError.style.display = 'block';
+        }
+    });
+})();
+</script>
+{% endblock %}

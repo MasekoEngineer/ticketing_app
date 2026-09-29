@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ticketing System{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('home') }}" class="brand">
+                <i class="fa-solid fa-ticket"></i> TicketHub
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('events') }}"><i class="fa-solid fa-calendar-days"></i> Events</a></li>
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'admin' %}
+                        <li><a href="{{ url_for('admin_bookings') }}"><i class="fa-solid fa-shield-halved"></i> Approvals</a></li>
+                        <li><a href="{{ url_for('admin_notifications') }}"><i class="fa-solid fa-envelope"></i> Email Log</a></li>
+                    {% elif current_user.is_organizer() %}
+                        <li><a href="{{ url_for('create_event') }}"><i class="fa-solid fa-plus"></i> Create Event</a></li>
+                        <li><a href="{{ url_for('my_events') }}"><i class="fa-solid fa-list"></i> My Events</a></li>
+                        <li><a href="{{ url_for('reports') }}"><i class="fa-solid fa-chart-line"></i> Reports</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('my_bookings') }}"><i class="fa-solid fa-bookmark"></i> My Bookings</a></li>
+                    {% endif %}
+                    <li><span class="user-tag"><i class="fa-solid fa-user"></i> {{ current_user.full_name }} ({{ current_user.role }})</span></li>
+                    <li><a href="{{ url_for('logout') }}" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}"><i class="fa-solid fa-right-to-bracket"></i> Login</a></li>
+                    <li><a href="{{ url_for('register') }}" class="btn-primary"><i class="fa-solid fa-user-plus"></i> Register</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {% if category == 'success' %}<i class="fa-solid fa-circle-check"></i>
+                        {% elif category == 'danger' %}<i class="fa-solid fa-circle-exclamation"></i>
+                        {% elif category == 'warning' %}<i class="fa-solid fa-triangle-exclamation"></i>
+                        {% else %}<i class="fa-solid fa-circle-info"></i>{% endif %}
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p><i class="fa-regular fa-copyright"></i> 2025 TicketHub — HSE412 Software Testing Project</p>
+    </footer>
+</body>
+</html>

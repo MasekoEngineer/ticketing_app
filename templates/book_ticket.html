@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Book Tickets — {{ event.title }}{% endblock %}
+{% block content %}
+<div class="form-container">
+    <h2><i class="fa-solid fa-ticket"></i> Book Tickets for "{{ event.title }}"</h2>
+    <p class="event-meta"><i class="fa-solid fa-location-dot"></i> {{ event.venue }} — <i class="fa-regular fa-calendar"></i> {{ event.event_date.strftime('%d %b %Y, %H:%M') }}</p>
+
+    <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+            {{ form.ticket_type_id.label }}
+            {{ form.ticket_type_id(class="form-control") }}
+            {% for error in form.ticket_type_id.errors %}<span class="error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.quantity.label }}
+            {{ form.quantity(class="form-control", min=1, max=10) }}
+            <small class="hint"><i class="fa-solid fa-circle-info"></i> Maximum 10 tickets per booking.</small>
+            {% for error in form.quantity.errors %}<span class="error">{{ error }}</span>{% endfor %}
+        </div>
+
+        {{ form.submit(class="btn-primary btn-block") }}
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}403 — TicketHub{% endblock %}
+{% block content %}
+<div class="error-page">
+    <h1><i class="fa-solid fa-lock"></i> 403</h1>
+    <p>You don't have permission to access this page.</p>
+    <a href="{{ url_for('home') }}" class="btn-primary"><i class="fa-solid fa-house"></i> Go Home</a>
+</div>
+{% endblock %}
